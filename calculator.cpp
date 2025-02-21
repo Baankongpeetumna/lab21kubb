@@ -1,66 +1,276 @@
+#if defined(UNICODE) && !defined(_UNICODE)
+
+    #define _UNICODE
+
+#elif defined(_UNICODE) && !defined(UNICODE)
+
+    #define UNICODE
+
+#endif
+
+
+
+#include <tchar.h>
+
 #include <windows.h>
 
-/* This is where all the input to the window goes to */
-LRESULT CALLBACK WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam) {
-	switch(Message) {
-		
-		/* Upon destruction, tell the main thread to stop */
-		case WM_DESTROY: {
-			PostQuitMessage(0);
-			break;
-		}
-		
-		/* All other messages (a lot of them) are processed using default procedures */
-		default:
-			return DefWindowProc(hwnd, Message, wParam, lParam);
-	}
-	return 0;
+#include <stdio.h>
+
+
+
+LRESULT CALLBACK WindowProcedure(HWND, UINT, WPARAM, LPARAM);
+
+
+
+HWND TextBox1, TextBox2;
+
+HWND button_plus, button_mi, button_time, button_divi;
+
+
+
+TCHAR szClassName[] = _T("CodeBlocksWindowsApp");
+
+
+
+int WINAPI WinMain(HINSTANCE hThisInstance,
+
+                   HINSTANCE hPrevInstance,
+
+                   LPSTR lpszArgument,
+
+                   int nCmdShow)
+
+{
+
+    HWND hwnd;
+
+    MSG messages;
+
+    WNDCLASSEX wincl;
+
+
+
+    wincl.hInstance = hThisInstance;
+
+    wincl.lpszClassName = szClassName;
+
+    wincl.lpfnWndProc = WindowProcedure;
+
+    wincl.style = CS_DBLCLKS;
+
+    wincl.cbSize = sizeof(WNDCLASSEX);
+
+    wincl.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+
+    wincl.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
+
+    wincl.hCursor = LoadCursor(NULL, IDC_ARROW);
+
+    wincl.lpszMenuName = NULL;
+
+    wincl.cbClsExtra = 0;
+
+    wincl.cbWndExtra = 0;
+
+    wincl.hbrBackground = (HBRUSH)COLOR_BACKGROUND;
+
+
+
+    if (!RegisterClassEx(&wincl))
+
+        return 0;
+
+
+
+    hwnd = CreateWindowEx(
+
+        0,
+
+        szClassName,
+
+        _T("My Calculator"),
+
+        WS_MINIMIZE | WS_SYSMENU,
+
+        CW_USEDEFAULT, CW_USEDEFAULT, 250, 200,
+
+        HWND_DESKTOP, NULL, hThisInstance, NULL);
+
+
+
+    ShowWindow(hwnd, nCmdShow);
+
+
+
+    while (GetMessage(&messages, NULL, 0, 0))
+
+    {
+
+        TranslateMessage(&messages);
+
+        DispatchMessage(&messages);
+
+    }
+
+
+
+    return messages.wParam;
+
 }
 
-/* The 'main' function of Win32 GUI programs: this is where execution starts */
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-	WNDCLASSEX wc; /* A properties struct of our window */
-	HWND hwnd; /* A 'HANDLE', hence the H, or a pointer to our window */
-	MSG msg; /* A temporary location for all messages */
 
-	/* zero out the struct and set the stuff we want to modify */
-	memset(&wc,0,sizeof(wc));
-	wc.cbSize	 = sizeof(WNDCLASSEX);
-	wc.lpfnWndProc	 = WndProc; /* This is where we will send messages to */
-	wc.hInstance	 = hInstance;
-	wc.hCursor	 = LoadCursor(NULL, IDC_ARROW);
-	
-	/* White, COLOR_WINDOW is just a #define for a system color, try Ctrl+Clicking it */
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-	wc.lpszClassName = "WindowClass";
-	wc.hIcon	 = LoadIcon(NULL, IDI_APPLICATION); /* Load a standard icon */
-	wc.hIconSm	 = LoadIcon(NULL, IDI_APPLICATION); /* use the name "A" to use the project icon */
 
-	if(!RegisterClassEx(&wc)) {
-		MessageBox(NULL, "Window Registration Failed!","Error!",MB_ICONEXCLAMATION|MB_OK);
-		return 0;
-	}
+LRESULT CALLBACK WindowProcedure(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
-	hwnd = CreateWindowEx(WS_EX_CLIENTEDGE,"WindowClass","Caption",WS_VISIBLE|WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, /* x */
-		CW_USEDEFAULT, /* y */
-		640, /* width */
-		480, /* height */
-		NULL,NULL,hInstance,NULL);
+{
 
-	if(hwnd == NULL) {
-		MessageBox(NULL, "Window Creation Failed!","Error!",MB_ICONEXCLAMATION|MB_OK);
-		return 0;
-	}
+    switch (message)
 
-	/*
-		This is the heart of our program where all input is processed and 
-		sent to WndProc. Note that GetMessage blocks code flow until it receives something, so
-		this loop will not produce unreasonably high CPU usage
-	*/
-	while(GetMessage(&msg, NULL, 0, 0) > 0) { /* If no error is received... */
-		TranslateMessage(&msg); /* Translate key codes to chars if present */
-		DispatchMessage(&msg); /* Send it to WndProc */
-	}
-	return msg.wParam;
+    {
+
+    case WM_ERASEBKGND:
+
+    {
+
+        HDC hdc = (HDC)wParam;
+
+        RECT rc;
+
+        GetClientRect(hwnd, &rc);
+
+        HBRUSH hBrush = CreateSolidBrush(RGB(219, 38, 38));
+
+        FillRect(hdc, &rc, hBrush);
+
+        DeleteObject(hBrush);
+
+        return 1;
+
+    }
+
+
+
+    case WM_CREATE:
+
+        CreateWindow("STATIC", "Please input two numbers", WS_VISIBLE | WS_CHILD,
+
+                     20, 20, 200, 25, hwnd, NULL, NULL, NULL);
+
+
+
+        TextBox1 = CreateWindow("EDIT", "", WS_BORDER | WS_VISIBLE | WS_CHILD,
+
+                                20, 50, 200, 25, hwnd, (HMENU)101, NULL, NULL);
+
+        TextBox2 = CreateWindow("EDIT", "", WS_BORDER | WS_VISIBLE | WS_CHILD,
+
+                                20, 80, 200, 25, hwnd, (HMENU)102, NULL, NULL);
+
+
+
+        button_plus = CreateWindow("BUTTON", "+", WS_VISIBLE | WS_CHILD | WS_BORDER,
+
+                                   30, 120, 30, 30, hwnd, (HMENU)1, NULL, NULL);
+
+        button_mi = CreateWindow("BUTTON", "-", WS_VISIBLE | WS_CHILD | WS_BORDER,
+
+                                 70, 120, 30, 30, hwnd, (HMENU)2, NULL, NULL);
+
+        button_time = CreateWindow("BUTTON", "*", WS_VISIBLE | WS_CHILD | WS_BORDER,
+
+                                   110, 120, 30, 30, hwnd, (HMENU)3, NULL, NULL);
+
+        button_divi = CreateWindow("BUTTON", "/", WS_VISIBLE | WS_CHILD | WS_BORDER,
+
+                                   150, 120, 30, 30, hwnd, (HMENU)4, NULL, NULL);
+
+        break;
+
+
+
+    case WM_COMMAND:
+
+        if (HIWORD(wParam) == BN_CLICKED)
+
+        {
+
+            char num1[10], num2[10];
+
+            GetWindowText(TextBox1, num1, 10);
+
+            GetWindowText(TextBox2, num2, 10);
+
+
+
+            long double val1 = strtold(num1,NULL);
+
+            long double val2 = strtold(num2,NULL);
+
+            long double result = 0;
+
+            char resText[100];
+
+
+
+            switch (LOWORD(wParam))
+
+            {
+
+            case 1:
+
+                result = val1 + val2;
+
+                break;
+
+            case 2:
+
+                result = val1 - val2;
+
+                break;
+
+            case 3:
+
+                result = val1 * val2;
+
+                break;
+
+            case 4:
+
+                result = val1 / val2;
+
+                break;
+
+            }
+
+
+
+            snprintf(resText, sizeof(resText), "%.7Lf", result);
+
+            MessageBox(hwnd, resText, "Result", MB_OK );
+
+        }
+
+        break;
+
+
+
+    case WM_DESTROY:
+
+        PostQuitMessage(0);
+
+        break;
+
+
+
+    default:
+
+        return DefWindowProc(hwnd, message, wParam, lParam);
+
+    }
+
+
+
+    return 0;
+
 }
+
